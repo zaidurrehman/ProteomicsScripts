@@ -10,17 +10,18 @@ def modify(in_):
     name = tokens_pipe[0].split(",")
     mutation = tokens_pipe[1]
     id_ = name[0]
-    
+
     new_line = id_.split("_")[0] + "_" + id_.split("_")[1]
     new_line += "|" + id_.split("_")[-1] + "_" + mutation + "|"
-    
+
     if len(name) > 1:
         for k in name[1:]:
             new_line += k + ","
-    
+
     for i in tokens_pipe[2:]:
-        new_line = new_line + "," + i
-    
+        new_line += i + ","
+
+    new_line = new_line[:-1]    # omit last comma
     return new_line
 
 def modify_or_line(line):
@@ -40,7 +41,7 @@ def modify_or_line(line):
     for i in tokens_pipe[3:]:
         new_line += i + ","
 
-    new_line = new_line[:-1]
+    new_line = new_line[:-1]    # omit last comma
 
     return new_line
 
@@ -59,28 +60,27 @@ for i in range(0, len(lines), 2):
     # assumption in for-loop: every second line in fasta file starts with '>'
     if not lines[i].startswith(">"):
         raise AttributeError("line", i+1, "does not start with '>'")
-    
+
     if " OR " not in lines[i]:
         new_line = modify(lines[i])
-        
+
         f_out.write(new_line)
         f_out.write(lines[i+1])
     else:
         # if description line contains multiple descriptions seperated by " OR ",
         # save same sequence with multiple modified descriptions
         multi_desc = lines[i].split(" OR ")
-        
+
         new_line = modify(multi_desc[0])
         new_line = new_line + "\r\n"
         f_out.write(new_line)
         f_out.write(lines[i+1])
-        
+
         for j in range(1,len(multi_desc)):
             line = multi_desc[j].split("\r\n")[0]
             new_line = modify_or_line(line)
             new_line = new_line + "\r\n"
             f_out.write(new_line)
             f_out.write(lines[i+1])
-        
-    
+
 f_out.close()
